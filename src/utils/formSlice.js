@@ -6,15 +6,33 @@ import axios from 'axios'
 export const formDataUser = createAsyncThunk(
     "formDataUser",
     async (values) => {
-        try {
-            const userData = await axios.post('http://localhost:8001/api/basicForm', {
-                name: values.name,
-                age: values.age,
-                email: values.email,
-                password: values.password,
-            });
+        const imageData = new FormData();
+        //const dateTime = new Date()
 
-            return userData.data;
+        try {
+
+            imageData.append("file", values.image)
+            imageData.append("upload_preset", "tfpcaaaw")
+
+            return await axios.post('https://api.cloudinary.com/v1_1/ddnab9ywj/image/upload', imageData)
+                .then(async (imageRes) => {
+                    console.log(imageRes);
+                    await axios.post('http://localhost:8001/api/basicForm', {
+                        name: values.name,
+                        age: values.age,
+                        email: values.email,
+                        password: values.password,
+                        image: imageRes.data.secure_url,
+                        public_id: imageRes.data.public_id
+                    }).then((userRes) => {
+                        console.log(userRes);
+                        return userRes
+                    })
+
+                    return imageRes
+
+                });
+
 
         } catch (error) {
             //console.log(error.response.data);
@@ -29,15 +47,32 @@ export const formDataUser = createAsyncThunk(
 export const editDataUser = createAsyncThunk(
     "editDataUser",
     async (values) => {
-        try {
-            const userData = await axios.patch('http://localhost:8001/api/basicForm/updateFormData/' + values.id , {
-                name: values.name,
-                age: values.age,
-                email: values.email,
-                password: values.password
-            });
+        const imageData = new FormData();
 
-            return userData.data;
+        try {
+
+            imageData.append("file", values.image)
+            imageData.append("upload_preset", "tfpcaaaw")
+
+            return await axios.post('https://api.cloudinary.com/v1_1/ddnab9ywj/image/upload', imageData)
+                .then(async (imageRes) => {
+                    console.log(imageRes);
+                    await axios.patch('http://localhost:8001/api/basicForm/updateFormData/' + values.id, {
+                        name: values.name,
+                        age: values.age,
+                        email: values.email,
+                        password: values.password,
+                        image: imageRes.data.secure_url,
+                        public_id: imageRes.data.public_id
+                    }).then((userRes) => {
+                        console.log(userRes);
+                        return userRes
+                    })
+
+                    return imageRes
+
+                });
+
 
         } catch (error) {
             return error.response.data;
@@ -46,11 +81,35 @@ export const editDataUser = createAsyncThunk(
     }
 );
 
+
+//action creator
+export const deleteDataUser = createAsyncThunk(
+    "deleteDataUser",
+    async (id) => {
+        try {
+
+            return await axios.delete('http://localhost:8001/api/basicForm/deleteFormData/' + id).then(res => {
+                if (res.status === 204) {
+                    return true;
+                }
+
+            })
+
+
+        } catch (error) {
+            return error.response.data;
+
+        }
+    }
+);
+
+
 const formSlice = createSlice({
     name: "formData",
     initialState: {
         registerStatus: '',
-        editStatus: ''
+        editStatus: '',
+        deleteStatus: ''
     },
     reducers: {},
     extraReducers: (builder) => {
@@ -60,7 +119,7 @@ const formSlice = createSlice({
         })
 
         builder.addCase(formDataUser.fulfilled, (state, action) => {
-            //console.log("action---", action.payload)
+            console.log("action---", action.payload)
             if (action.payload) {
                 return {
                     ...state,
@@ -76,7 +135,7 @@ const formSlice = createSlice({
                 registerStatus: "rejected",
             }
         })
-        
+
 
         //-----------------------------------//
 
@@ -100,6 +159,32 @@ const formSlice = createSlice({
             return {
                 ...state,
                 editStatus: "rejected",
+            }
+        })
+
+
+        //-----------------------------------//
+
+
+        builder.addCase(deleteDataUser.pending, (state) => {
+            return { ...state, deleteStatus: "pending" }
+        })
+
+        builder.addCase(deleteDataUser.fulfilled, (state, action) => {
+            console.log("delete action---", action.payload)
+            if (action.payload) {
+                return {
+                    ...state,
+                    deleteStatus: "success"
+                }
+            } else return state;
+
+        })
+
+        builder.addCase(deleteDataUser.rejected, (state) => {
+            return {
+                ...state,
+                deleteStatus: "rejected",
             }
         })
 

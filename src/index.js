@@ -7,7 +7,7 @@ import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider  } from "react-router-dom";
 import List from './components/List';
 import Form from './components/Form';
-import EditForm from './components/EditForm';
+//import EditForm from './components/EditForm';
 
 const appRouter = createBrowserRouter([
   {
@@ -19,14 +19,14 @@ const appRouter = createBrowserRouter([
                           element: <Form />
                   },
                   {
+                        path: "/editFormData/:formId",
+                        element: <Form />
+                  },
+                  {
                           path: "/list",
                           element: <List />
-                  },
-                  
-                  {
-                          path: "/editFormData/:formId",
-                          element: <EditForm />
                   }
+                  
           ],
           
   },
