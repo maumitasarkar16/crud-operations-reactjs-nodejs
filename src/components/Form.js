@@ -20,7 +20,7 @@ const Form = () => {
 
     const basicFormData = useSelector((store) => store.formData.registerStatus)
     const editFormData = useSelector((store) => store.formData.editStatus)
-   
+
     //-------------------------------------------------------------//
 
     const [userData, setUserData] = useState({
@@ -117,17 +117,17 @@ const Form = () => {
 
                 </div>
 
-                {/* {!formId && */}
-                    <div className='text-white  items-center justify-center grid grid-cols-12'>
-                        <span className="col-span-3">
-                            <label>Upload Profile: </label>
-                            {formik.errors.image && <p className='text-red-700 font-normal text-sm'>{formik.errors.image}</p>}
-                        </span>
-                        <span className="col-span-9 text-white items-center pl-4 lg:pl-2">
-                            <input type="file" ref={img} name="image" onChange={(e) => formik.setFieldValue("image", e.target.files[0])} />
-                        </span>
-                    </div>
-                {/* } */}
+
+                <div className='text-white  items-center justify-center grid grid-cols-12'>
+                    <span className="col-span-3">
+                        <label>Upload Profile: </label>
+                        {formik.errors.image && <p className='text-red-700 font-normal text-sm'>{formik.errors.image}</p>}
+                    </span>
+                    <span className="col-span-9 text-white items-center pl-4 lg:pl-2">
+                        <input type="file" ref={img} name="image" onChange={(e) => formik.setFieldValue("image", e.target.files[0])} />
+                    </span>
+                </div>
+
 
                 <div className='text-white  items-center justify-center grid grid-cols-12'>
                     <span className="col-span-3" >
