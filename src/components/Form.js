@@ -10,13 +10,8 @@ const Form = () => {
 
     const { formId } = useParams();
     const dispatch = useDispatch();
-
-    const nme = useRef();
-    const ag = useRef();
-    const eml = useRef();
-    const img = useRef();
-    const pwd = useRef();
-    const cnfpwd = useRef();
+    const ref= useRef();
+    const confPwd= useRef();
 
     const basicFormData = useSelector((store) => store.formData.registerStatus)
     const editFormData = useSelector((store) => store.formData.editStatus)
@@ -30,12 +25,14 @@ const Form = () => {
         email: '',
         password: '',
         image: '',
-        public_id: ''
+        public_id: '',
+        file: '',
+        confirmPassword:''
     })
 
     useEffect(() => {
         if (formId) {
-            getSingleFormData()
+            getSingleFormData();
         } else {
             setUserData({
                 id: '',
@@ -44,10 +41,15 @@ const Form = () => {
                 email: '',
                 password: '',
                 image: '',
-                public_id: ''
+                public_id: '',
+                file: '',
+                confirmPassword: ''
             })
+
+            ref.current.value = '';
+            confPwd.current.value = ''
         }
-    }, [formId])
+    }, [formId,ref])
 
     const getSingleFormData = async () => {
         const data = await fetch('http://localhost:8001/api/basicForm/getFormDataList/' + formId);
@@ -61,7 +63,9 @@ const Form = () => {
             email: json.email,
             password: json.password,
             image: json.image,
-            public_id: json.pubic_id
+            public_id: json.pubic_id,
+            file: json.image
+        
         })
 
 
@@ -75,15 +79,11 @@ const Form = () => {
             dispatch(editDataUser(values))
         } else {
             dispatch(formDataUser(values))
+            ref.current.value = '';
+            confPwd.current.value = ''
+            actions.resetForm();
         }
-
-        nme.current.value = "";
-        ag.current.value = "";
-        eml.current.value = "";
-        img.current.value = "";
-        pwd.current.value = "";
-        cnfpwd.current.value = "";
-        actions.resetForm();
+        
     }
 
     const formik = useFormik({
@@ -93,7 +93,9 @@ const Form = () => {
             age: userData.age ? userData.age : '',
             email: userData.email ? userData.email : '',
             password: userData.password ? userData.password : '',
-            image: userData.image ? userData.image : '',
+            image: userData.image ? userData.image.substring(userData.image.lastIndexOf("/") + 1) : '',
+            file: userData.image ? userData.image : ''
+            
         },
         enableReinitialize: true,
         validationSchema: formId ? editSchema : basicSchema,
@@ -101,9 +103,26 @@ const Form = () => {
     });
 
 
+    //----------------------------------------------//
+    const handlePreview = (e) => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            setUserData({
+                ...userData,
+                file: reader.result,
+            })
+        }
+        reader.readAsDataURL(e.target.files[0]);
+        formik.setFieldValue("image", e.target.files[0]);
+
+        
+    }
+    //----------------------------------------------//
+
+   
     return (
         <div className='w-1/2 m-auto'>
-            <h1 className='text-white font-semibold p-4 m-4 text-2xl items-center justify-center text-center'>Basic Form</h1>
+            <h1 className='text-white font-semibold p-4 m-4 text-2xl items-center justify-center text-center'>{formId ? "Edit Form" : "Basic Form"}</h1>
             <form onSubmit={formik.handleSubmit} className='flex flex-col '>
 
                 <div className='text-white  items-center justify-center grid grid-cols-12'>
@@ -112,19 +131,22 @@ const Form = () => {
                         {formik.errors.name && formik.touched.name && <p className='text-red-700 font-normal text-sm'>{formik.errors.name}</p>}
                     </span>
                     <span className="col-span-9 text-black items-center pl-4 lg:pl-0 ">
-                        <input type="text" ref={nme} name="name" value={formik.values.name} placeholder='Enter Your Name' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.name && formik.touched.name ? "border-2 border-red-600 w-[100%] h-9 rounded p-2 m-2 " : " p-2 m-2 w-[100%] h-9 rounded"} />
+                        <input type="text" name="name" value={formik.values.name} placeholder='Enter Your Name' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.name && formik.touched.name ? "border-2 border-red-600 w-[100%] h-9 rounded p-2 m-2 " : " p-2 m-2 w-[100%] h-9 rounded"} />
                     </span>
 
                 </div>
 
-
+               
+                
                 <div className='text-white  items-center justify-center grid grid-cols-12'>
                     <span className="col-span-3">
                         <label>Upload Profile: </label>
                         {formik.errors.image && <p className='text-red-700 font-normal text-sm'>{formik.errors.image}</p>}
                     </span>
-                    <span className="col-span-9 text-white items-center pl-4 lg:pl-2">
-                        <input type="file" ref={img} name="image" onChange={(e) => formik.setFieldValue("image", e.target.files[0])} />
+                    <span className="col-span-9 text-white items-center pl-4 lg:pl-2"> 
+                        <input type="file"  name="image" ref={ref}  onChange={handlePreview} />
+                        {!formId && formik.values.image ? <img src={userData.file} alt="" className='w-48 h-20'/> : formId && userData.file ? <img src={userData.file} alt="" className='w-48 h-20'/> : ''}
+                        
                     </span>
                 </div>
 
@@ -135,7 +157,7 @@ const Form = () => {
                         {formik.errors.age && formik.touched.age && <p className='text-red-700 font-normal text-sm'>{formik.errors.age}</p>}
                     </span>
                     <span className="col-span-9 text-black items-center pl-4 lg:pl-0">
-                        <input type="number" ref={ag} name="age" value={formik.values.age} placeholder='Enter Your Age' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.age && formik.touched.age ? " border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2 " : "rounded h-9 w-[100%] p-2 m-2"} />
+                        <input type="number"  name="age" value={formik.values.age} placeholder='Enter Your Age' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.age && formik.touched.age ? " border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2 " : "rounded h-9 w-[100%] p-2 m-2"} />
                     </span>
 
                 </div>
@@ -146,7 +168,7 @@ const Form = () => {
                         {formik.errors.email && formik.touched.email && <p className='text-red-700 font-normal text-sm'>{formik.errors.email}</p>}
                     </span>
                     <span className="col-span-9 text-black items-center pl-4 lg:pl-0">
-                        <input type="email" ref={eml} name="email" value={formik.values.email} placeholder='Enter Your Email Id' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.email && formik.touched.email ? "border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
+                        <input type="email"  name="email" value={formik.values.email} placeholder='Enter Your Email Id' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.email && formik.touched.email ? "border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
                     </span>
                 </div>
 
@@ -158,7 +180,7 @@ const Form = () => {
                                 {formik.errors.password && formik.touched.password && <p className='text-red-700 font-normal text-sm'>{formik.errors.password}</p>}
                             </span>
                             <span className="col-span-9 text-black items-center pl-4 lg:pl-0">
-                                <input type="password" ref={pwd} name="password" value={formik.values.password} placeholder='Enter Your Password' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.password && formik.touched.password ? " border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
+                                <input type="password"  name="password" value={formik.values.password} placeholder='Enter Your Password' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.password && formik.touched.password ? " border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
                             </span>
                         </div>
 
@@ -168,7 +190,7 @@ const Form = () => {
                                 {formik.errors.confirmPassword && formik.touched.confirmPassword && <p className='text-red-700 font-normal text-sm'>{formik.errors.confirmPassword}</p>}
                             </span>
                             <span className="col-span-9 text-black items-center pl-4 lg:pl-0">
-                                <input type="password" ref={cnfpwd} name="confirmPassword" value={formik.values.confirmPassword} placeholder='Confirm Password' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.confirmPassword && formik.touched.confirmPassword ? "border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
+                                <input type="password" ref={confPwd}  name="confirmPassword" value={formik.values.confirmPassword} placeholder='Confirm Password' onChange={formik.handleChange} onBlur={formik.handleBlur} className={formik.errors.confirmPassword && formik.touched.confirmPassword ? "border-2 border-red-600 rounded h-9 w-[100%] p-2 m-2" : "rounded h-9 w-[100%] p-2 m-2"} />
                             </span>
                         </div>
                     </div>
