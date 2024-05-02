@@ -93,7 +93,7 @@ const Form = () => {
             age: userData.age ? userData.age : '',
             email: userData.email ? userData.email : '',
             password: userData.password ? userData.password : '',
-            image: userData.image ? userData.image.substring(userData.image.lastIndexOf("/") + 1) : '',
+            image: userData.image ? userData.image : '',
             file: userData.image ? userData.image : ''
             
         },
